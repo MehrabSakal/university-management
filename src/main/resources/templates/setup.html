@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create First Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <h2>University Management System</h2>
+    <h3>Create First Admin Account</h3>
+
+    <p th:if="${error}" th:text="${error}" style="color:red"></p>
+
+    <form action="/setup" method="post">
+        <label>Name:</label>
+        <input type="text" name="name" required>
+        <br><br>
+
+        <label>Email:</label>
+        <input type="email" name="email" required>
+        <br><br>
+
+        <label>Password:</label>
+        <input type="password" name="password" minlength="6" required>
+        <br><br>
+
+        <label>Department:</label>
+        <input type="text" name="department" required>
+        <br><br>
+
+        <button type="submit">Create Admin</button>
+    </form>
+</body>
+</html>

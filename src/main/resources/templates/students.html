@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Admins</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <h1>Manage Admins</h1>
+    <a href="/dashboard">Dashboard</a>
+
+    <form id="userForm">
+        <p><input id="name" placeholder="Name" required></p>
+        <p><input id="email" type="email" placeholder="Email" required></p>
+        <p><input id="password" type="password"
+                  placeholder="Password (minimum 6 characters)"
+                  minlength="6" required></p>
+        <p><input id="department" placeholder="Department" required></p>
+        <button type="submit">Add Students</button>
+    </form>
+
+    <p id="message"></p>
+    <table border="1" cellpadding="8">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="users"></tbody>
+    </table>
+
+<script>
+const api = "/api/students";
+
+async function loadUsers() {
+    const response = await fetch(api);
+    if (!response.ok) {
+        document.getElementById("message").textContent =
+            "Unable to load admins. Check your permissions.";
+        return;
+    }
+
+    const users = await response.json();
+    const tbody = document.getElementById("users");
+    tbody.replaceChildren();
+
+    users.forEach(user => {
+        const row = document.createElement("tr");
+
+        [user.id, user.name, user.email, user.department || ""]
+            .forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+        const action = document.createElement("td");
+
+        const edit = document.createElement("button");
+        edit.textContent = "Edit";
+        edit.onclick = () => editUser(user);
+
+        const remove = document.createElement("button");
+        remove.textContent = "Delete";
+        remove.onclick = () => deleteUser(user.id);
+
+        action.append(edit, remove);
+        row.appendChild(action);
+        tbody.appendChild(row);
+    });
+}
+
+document.getElementById("userForm").onsubmit = async event => {
+    event.preventDefault();
+
+    const data = {
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+        department: document.getElementById("department").value.trim()
+    };
+
+    const response = await fetch(api, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    document.getElementById("message").textContent =
+        response.ok ? "Admin added successfully." : "Failed to add admin.";
+
+    if (response.ok) {
+        event.target.reset();
+        loadUsers();
+    }
+};
+
+
+function editUser(user) {
+    const resource = api.split("/").pop();
+
+    window.location.href =
+        "/edit/" + resource + "/" + encodeURIComponent(user.id);
+}
+
+
+async function deleteUser(id) {
+    if (!confirm("Delete this admin?")) return;
+
+    const response = await fetch(api + "/" + id, {method: "DELETE"});
+    alert(response.ok ? "Admin deleted." : "Delete failed.");
+    if (response.ok) loadUsers();
+}
+
+loadUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: university-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: university_db
+      MYSQL_ROOT_PASSWORD: ChangeThisRootPassword123!
+      MYSQL_USER: university_user
+      MYSQL_PASSWORD: ChangeThisAppPassword123!
+    volumes:
+      - university_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pChangeThisRootPassword123!"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+    container_name: university-app
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/university_db
+      SPRING_DATASOURCE_USERNAME: university_user
+      SPRING_DATASOURCE_PASSWORD: ChangeThisAppPassword123!
+    depends_on:
+      db:
+        condition: service_healthy
+
+  test:
+    build:
+      context: .
+      target: build
+    profiles:
+      - testing
+    command: ["mvn", "-B", "clean", "verify", "-Dspring.profiles.active=test"]
+
+volumes:
+  university_data:

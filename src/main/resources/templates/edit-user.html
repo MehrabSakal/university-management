@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User | University Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 650px;
+            margin: 45px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #1d4ed8;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 7px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
+        .hint {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        button, .cancel {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .cancel {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #message {
+            margin-top: 18px;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            color: #dc2626;
+        }
+
+        .success {
+            color: #15803d;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Edit User</h1>
+    <p class="subtitle">Update the user's information.</p>
+
+    <form id="editForm">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required>
+
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required>
+
+        <label for="department">Department</label>
+        <input type="text" id="department">
+
+        <label for="role">Role</label>
+        <select id="role" required>
+            <option value="ADMIN">Admin</option>
+            <option value="TEACHER">Teacher</option>
+            <option value="STUDENT">Student</option>
+        </select>
+
+        <label for="password">New Password</label>
+        <input
+            type="password"
+            id="password"
+            autocomplete="new-password"
+            placeholder="Leave blank to keep current password">
+        <p class="hint">
+            Leave this blank if you do not want to change the password.
+        </p>
+
+        <div class="buttons">
+            <button class="save" id="saveButton" type="submit">
+                Save Changes
+            </button>
+
+            <a class="cancel" id="cancelButton" href="/dashboard">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    <p id="message"></p>
+</div>
+
+<script th:inline="javascript">
+    const resource = /*[[${resource}]]*/ "students";
+    const userId = /*[[${userId}]]*/ 1;
+
+    const apiUrl = `/api/${resource}/${userId}`;
+
+    const form = document.getElementById("editForm");
+    const message = document.getElementById("message");
+    const saveButton = document.getElementById("saveButton");
+
+    document.getElementById("cancelButton").href = `/${resource}`;
+
+    function showMessage(text, isError) {
+        message.textContent = text;
+        message.className = isError ? "error" : "success";
+    }
+
+    async function loadUser() {
+        try {
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error(
+                    "Could not load user. HTTP " + response.status
+                );
+            }
+
+            const user = await response.json();
+
+            document.getElementById("name").value = user.name ?? "";
+            document.getElementById("email").value = user.email ?? "";
+            document.getElementById("department").value =
+                user.department ?? "";
+
+            if (user.role) {
+                document.getElementById("role").value =
+                    String(user.role).toUpperCase();
+            }
+        } catch (error) {
+            showMessage(error.message, true);
+            saveButton.disabled = true;
+        }
+    }
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const user = {
+            name: document.getElementById("name").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            department:
+                document.getElementById("department").value.trim(),
+            role: document.getElementById("role").value
+        };
+
+        const password = document.getElementById("password").value;
+
+        if (password.trim() !== "") {
+            user.password = password;
+        }
+
+        saveButton.disabled = true;
+        showMessage("Saving changes...", false);
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(user)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+
+                throw new Error(
+                    errorText || "Update failed. HTTP " + response.status
+                );
+            }
+
+            showMessage("User updated successfully!", false);
+
+            setTimeout(function () {
+                window.location.href = `/${resource}`;
+            }, 800);
+
+        } catch (error) {
+            showMessage(error.message, true);
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    loadUser();
+</script>
+</body>
+</html>
