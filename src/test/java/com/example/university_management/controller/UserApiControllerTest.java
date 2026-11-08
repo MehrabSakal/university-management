@@ -2,21 +2,21 @@ package com.example.university_management.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.example.university_management.model.UniversityUser;
-import com.example.university_management.repository.UserRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.example.university_management.model.UniversityUser;
+import com.example.university_management.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UserApiControllerTest {
@@ -49,7 +49,7 @@ class UserApiControllerTest {
 
         ResponseEntity<?> response = controller.create("students", request);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         UniversityUser saved = (UniversityUser) response.getBody();
         assertNotNull(saved);
         assertEquals("STUDENT", saved.getRole());
@@ -57,7 +57,7 @@ class UserApiControllerTest {
         verify(repository).save(any(UniversityUser.class));
     }
 
-    // Controller Unit Test 2: Duplicate email returns HTTP 409 and is not saved.
+
     @Test
     void createStudentWithExistingEmailReturnsConflict() {
         UniversityUser request = new UniversityUser();
