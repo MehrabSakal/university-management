@@ -49,7 +49,7 @@ class UserApiControllerTest {
 
         ResponseEntity<?> response = controller.create("students", request);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         UniversityUser saved = (UniversityUser) response.getBody();
         assertNotNull(saved);
         assertEquals("STUDENT", saved.getRole());
