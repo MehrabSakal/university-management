@@ -98,6 +98,6 @@ class UniversityManagementIT {
     @WithMockUser(username = "student@example.com", roles = "STUDENT")
     void studentCannotAccessAdminApi() throws Exception {
         mockMvc.perform(get("/api/admins"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 }
